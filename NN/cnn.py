@@ -76,7 +76,6 @@ class cnn_train:
         self.current_time = 0
         self.ek = []
         self.ek_t = []
-        self.m = 0
 
         self.device = torch.device('mps')
         self.device0 = torch.device('cpu')
