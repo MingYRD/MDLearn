@@ -223,23 +223,23 @@ def normalize_f(data):
 def normalize_MM(data):
     return (data - data.min()) / (data.max() - data.min())
 
-# cols = data_train.shape[1]
-# X_train = data_train.iloc[:, 1:cols]
-# y_train = data_train.iloc[:, 0:1]
-# # X_train = normalize_MM(X_train)
-# X_train = np.asarray(X_train.values)
-# y_train = np.asarray(y_train.values)
-#
-# colss = data_test.shape[1]
-# X_test = data_test.iloc[:, 2:colss]
-# y_test = data_test.iloc[:, 0:1]
-# # X_test = normalize_MM(X_test)
-# X_test = np.asarray(X_test.values)
-# y_test = np.asarray(y_test.values)
-# n = 200
-# bpc = BP_C(q=32, eta=0.01, max_iter=n)
-# bpc.init_params(X_train, X_test)
-# bpc.bp_train(X_train, y_train, X_test, y_test)
+cols = data_train.shape[1]
+X_train = data_train.iloc[:, 1:cols]
+y_train = data_train.iloc[:, 0:1]
+# X_train = normalize_MM(X_train)
+X_train = np.asarray(X_train.values)
+y_train = np.asarray(y_train.values)
+
+colss = data_test.shape[1]
+X_test = data_test.iloc[:, 2:colss]
+y_test = data_test.iloc[:, 0:1]
+# X_test = normalize_MM(X_test)
+X_test = np.asarray(X_test.values)
+y_test = np.asarray(y_test.values)
+n = 300
+bpc = BP_C(q=3, eta=0.01, max_iter=n)
+bpc.init_params(X_train, X_test)
+bpc.bp_train(X_train, y_train, X_test, y_test)
 # #
 # # TPR_bp, FPR_bp = bpc.ROC(X_test, y_test)
 # # print(len(FPR_bp))
@@ -253,8 +253,8 @@ def normalize_MM(data):
 # # ax.set_title('ROC Curve-Compared')
 # # plt.show()
 # ek, ek_t = bpc.get_ek_s()
-# ans, y_pred, y_pro = bpc.predict(X_test, y_test)
-# print(ans)
+ans, y_pred, y_pro = bpc.predict(X_test, y_test)
+print(ans)
 # print(y_pred)
 # x = np.linspace(0, n, num=n)
 #

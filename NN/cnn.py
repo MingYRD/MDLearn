@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 import time
 from tqdm import tqdm
+from alive_progress import alive_bar
 
 """
 data pre
@@ -54,8 +55,8 @@ class cnn_lx(torch.nn.Module):
                       kernel_size=(3, 3), stride=(1, 1),
                       padding=1),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(16, 32, 3, 1, 1),  # 第二次卷积，尺寸为32×14×14
-            nn.MaxPool2d(2, stride=2),  # 第二次池化，尺寸为32×7×7
+            nn.Conv2d(16, 32, 3, 1, 1),
+            nn.MaxPool2d(2, stride=2),
             nn.Flatten(),  # 压缩为1维
             nn.Linear(32 * 7 * 7, 16),
             nn.ReLU(),  # 激励函数
@@ -88,30 +89,34 @@ class cnn_train:
         loss_fun = torch.nn.CrossEntropyLoss()
 
         self.old_time = time.time()
-        for epoch in tqdm(range(self.epochs)):
-            loss_train = 0
-            for img, labels in train_dataloader:
-                img = img.to(self.device)
-                labels = labels.to(self.device)
-                out = self.cnn.forward(img)
-                loss = loss_fun(out, labels)
-                loss_train += loss
-                opt.zero_grad()
-                loss.backward()
-                opt.step()
-            total_loss = 0  # 保存这次测试总的loss
-            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                for img, labels in test_dataloader:
+        with alive_bar(self.epochs) as bar:
+            for epoch in range(self.epochs):
+                loss_train = 0
+                for img, labels in train_dataloader:
                     img = img.to(self.device)
                     labels = labels.to(self.device)
-                    outputs = self.cnn.forward(img)
-                    loss = loss_fun(outputs, labels)
-                    total_loss += loss  # 累计误差
-            # print("第{}次训练的Loss:{}".format(epoch + 1, total_loss))
-            self.ek.append(loss_train.to(self.device0))
-            self.ek_t.append(total_loss.to(self.device0))
+                    out = self.cnn.forward(img)
+                    loss = loss_fun(out, labels)
+                    loss_train += loss
+                    opt.zero_grad()
+                    loss.backward()
+                    opt.step()
+                total_loss = 0  # 保存这次测试总的loss
+                with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+                    for img, labels in test_dataloader:
+                        img = img.to(self.device)
+                        labels = labels.to(self.device)
+                        outputs = self.cnn.forward(img)
+                        loss = loss_fun(outputs, labels)
+                        total_loss += loss  # 累计误差
+                self.ek.append(loss_train.to(self.device0))
+                self.ek_t.append(total_loss.to(self.device0))
+                bar()
+                print("第{}次训练的Loss:{}".format(epoch + 1, total_loss))
+                print('Epoch:{} / {}'.format(str(epoch+1), str(self.epochs)))
+                self.predict(test_dataloader)
         self.current_time = time.time()
-        print('Time:' + str(self.current_time - self.old_time) + 's')
+        # print('Time:' + str(self.current_time - self.old_time) + 's')
         torch.save(self.cnn, "cnn_digit.nn")
 
     def predict(self, test_dataloader):

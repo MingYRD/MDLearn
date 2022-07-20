@@ -23,18 +23,33 @@ test_data = torchvision.datasets.MNIST(
     transform=torchvision.transforms.ToTensor()
 )
 
-train_dataloader = DataLoader(train_data, batch_size=64, shuffle=True)
-test_dataloader = DataLoader(test_data, batch_size=64, shuffle=False)
+train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size=128, shuffle=False)
 
 
-lr = 0.1
+# cn = 1
+# for img, labels in train_dataloader:
+#     img = img[0]  # 若出错可改成img = image[0].cuda 试试
+#
+#     img = img.numpy()  # FloatTensor转为ndarray
+#     # img = np.transpose(img, (1, 2, 0))  # 把channel那一维放到最后
+#     # 显示图片
+#     img = img.squeeze()
+#     plt.imshow(img)
+#     plt.show()
+#     cn += 1
+#     if cn > 6:
+#         break
+
+
+lr = 0.08
 epochs = 10
 cnn_m = cnn_lx()
 cnn = cnn_train(lr, epochs, cnn_m)
 
 cnn.train(train_dataloader, test_dataloader)
 cnn.predict(train_dataloader)
-cnn.predict(test_dataloader)
+# cnn.predict(test_dataloader)
 ek, ek_t = cnn.get_ek()
 for i in range(len(ek)):
     ek[i] = ek[i].detach().numpy()

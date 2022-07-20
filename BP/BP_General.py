@@ -85,8 +85,8 @@ class BP_G:
         pre_sum = 0.
         for j in range(self.out_num):
             self.yk_p[k, j] = self.h_out[self.hide_num+1, j]
-            pre_sum += np.power((self.yk_p[k, j] - self.yk[k, j]), 2)
-            # pre_sum += -(self.yk[k, j] * np.log(self.yk_p[k, j]) + (1 - self.yk[k, j]) * np.log(1 - self.yk_p[k, j]))
+            # pre_sum += np.power((self.yk_p[k, j] - self.yk[k, j]), 2)
+            pre_sum += -(self.yk[k, j] * np.log(self.yk_p[k, j]) + (1 - self.yk[k, j]) * np.log(1 - self.yk_p[k, j]))
         self.ek[k] = pre_sum
 
     def _backward(self, x, k):
@@ -97,8 +97,8 @@ class BP_G:
             self.h_out[0, i] = x[i]
 
         for j in range(self.out_num):
-            f[self.hide_num, j] = self.yk_p[k, j]*(1 - self.yk_p[k, j])*(self.yk[k, j] - self.yk_p[k, j])
-            # f[self.hide_num, j] = self.yk[k, j] - self.yk_p[k, j]
+            # f[self.hide_num, j] = self.yk_p[k, j]*(1 - self.yk_p[k, j])*(self.yk[k, j] - self.yk_p[k, j])
+            f[self.hide_num, j] = self.yk[k, j] - self.yk_p[k, j]
 
         i = self.hide_num
         while i >= 1:
