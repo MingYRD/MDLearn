@@ -108,8 +108,8 @@ class cnn_train:
                     loss = loss_fun(outputs, labels)
                     total_loss += loss  # 累计误差
             # print("第{}次训练的Loss:{}".format(epoch + 1, total_loss))
-            # ek.append(loss_train)
-            # ek_t.append(total_loss)
+            self.ek.append(loss_train.to(self.device0))
+            self.ek_t.append(total_loss.to(self.device0))
         self.current_time = time.time()
         print('Time:' + str(self.current_time - self.old_time) + 's')
         torch.save(self.cnn, "cnn_digit.nn")

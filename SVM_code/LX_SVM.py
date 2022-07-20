@@ -25,31 +25,6 @@ def normalize_f(data):
     return (data - data.mean()) / data.std()
 
 
-def calAUC(prob, labels):
-    f = list(zip(prob, labels))
-    rank = [values2 for values1, values2 in sorted(f, key=lambda x: x[0])]
-    rankList = [i + 1 for i in range(len(rank)) if rank[i] == 1]
-    posNum = 0
-    negNum = 0
-    for i in range(len(labels)):
-        if (labels[i] == 1):
-            posNum += 1
-        else:
-            negNum += 1
-
-    auc = (sum(rankList) - (posNum * (posNum + 1)) / 2) / (posNum * negNum)
-    print(auc)
-    return auc
-
-
-def ComputeAUC(TPR, FPR):
-    auc = 0.
-    x = np.sort(FPR)
-    y = np.sort(TPR)
-    for i in range(len(FPR) - 1):
-        auc += (x[i + 1] - x[i]) * (y[i] + y[i + 1])
-
-    return auc / 2
 
 
 cols = data_train.shape[1]

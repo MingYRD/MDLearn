@@ -73,6 +73,7 @@ cnn = cnn_lx()
 opt = torch.optim.SGD(cnn.parameters(), lr=lr)
 loss_fun = torch.nn.CrossEntropyLoss()
 
+
 old_time = time.time()
 for epoch in range(epochs):
 
