@@ -34,7 +34,7 @@ y_test = y_test / (maxy - miny) - miny / (maxy - miny)
 
 
 
-it = 31000
+it = 30000
 eta = 0.001
 every_num = []
 

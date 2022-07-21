@@ -51,15 +51,19 @@ class cnn_lx(torch.nn.Module):
     def __init__(self):
         super(cnn_lx, self).__init__()
         self.net = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=16,
+            nn.Conv2d(in_channels=3, out_channels=16,
                       kernel_size=(3, 3), stride=(1, 1),
                       padding=1),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(16, 32, 3, 1, 1),
+            nn.Conv2d(16, 64, 3, 1, 1),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(64, 128, 3, 1, 1),
             nn.MaxPool2d(2, stride=2),
             nn.Flatten(),  # 压缩为1维
-            nn.Linear(32 * 7 * 7, 16),
+            nn.Linear(128 * 4 * 4, 32),
             nn.ReLU(),  # 激励函数
+            nn.Linear(32, 16),
+            nn.ReLU(),
             nn.Linear(16, 10)
         )
 
@@ -112,12 +116,12 @@ class cnn_train:
                 self.ek.append(loss_train.to(self.device0))
                 self.ek_t.append(total_loss.to(self.device0))
                 bar()
+                print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
                 print("第{}次训练的Loss:{}".format(epoch + 1, total_loss))
-                print('Epoch:{} / {}'.format(str(epoch+1), str(self.epochs)))
                 self.predict(test_dataloader)
         self.current_time = time.time()
         # print('Time:' + str(self.current_time - self.old_time) + 's')
-        torch.save(self.cnn, "cnn_digit.nn")
+        # torch.save(self.cnn, "cnn_digit.nn")
 
     def predict(self, test_dataloader):
         ans = 0

@@ -29,6 +29,7 @@ test_dataloader = DataLoader(test_data, batch_size=128, shuffle=False)
 
 # cn = 1
 # for img, labels in train_dataloader:
+#     print(img.shape)
 #     img = img[0]  # 若出错可改成img = image[0].cuda 试试
 #
 #     img = img.numpy()  # FloatTensor转为ndarray
