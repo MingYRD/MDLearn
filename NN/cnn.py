@@ -59,6 +59,7 @@ class cnn_lx(torch.nn.Module):
             nn.MaxPool2d(2, stride=2),
             nn.Flatten(),  # 压缩为1维
             nn.Linear(32 * 7 * 7, 16),
+            nn.Dropout(0.3),
             nn.ReLU(),  # 激励函数
             nn.Linear(16, 10)
         )
