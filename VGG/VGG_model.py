@@ -18,9 +18,9 @@ class vgg_model(nn.Module):
             nn.Linear(self.out_channels*self.end_shape*self.end_shape, self.hidden_num),
             nn.ReLU(inplace=True),
             nn.Dropout(0.5),
-            nn.Linear(self.hidden_num, self.hidden_num),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5),
+            # nn.Linear(self.hidden_num, self.hidden_num),
+            # nn.ReLU(inplace=True),
+            # nn.Dropout(0.5),
             nn.Linear(self.hidden_num, 256),
             nn.ReLU(inplace=True),
             nn.Dropout(0.5),
@@ -35,10 +35,10 @@ class vgg_model(nn.Module):
             if p != 'M' and p != 'LRN':
                 if p == 255 or p == 511:
                     p = p + 1
-                    self.layers += [nn.Conv2d(in_channels=pre, out_channels=p, kernel_size=1, stride=1, padding=0), nn.ReLU(inplace=True)]
+                    self.layers += [nn.Conv2d(in_channels=pre, out_channels=p, kernel_size=1, stride=1, padding=0), nn.BatchNorm2d(p), nn.ReLU(inplace=True)]
 
                 else:
-                    self.layers += [nn.Conv2d(in_channels=pre, out_channels=p, kernel_size=3, stride=1, padding=1), nn.ReLU(inplace=True)]
+                    self.layers += [nn.Conv2d(in_channels=pre, out_channels=p, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(p), nn.ReLU(inplace=True)]
                 pre = p
             elif p == 'LRN':
                 continue
@@ -96,8 +96,9 @@ class vgg_test:
 
     def train(self, train_loader, test_loader):
         self.vgg = self.vgg.to(self.device)
-        opt = torch.optim.SGD(self.vgg.parameters(), lr=self.lr, momentum=0.9)
+        opt = torch.optim.SGD(self.vgg.parameters(), lr=self.lr, momentum=0.9, weight_decay=0.001)
         loss_func = nn.CrossEntropyLoss()
+        scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
         with alive_bar(self.epochs) as bar:
             for epoch in range(self.epochs):
                 loss_a = 0
@@ -105,11 +106,12 @@ class vgg_test:
                     img = img.to(self.device)
                     labels = labels.to(self.device)
                     pred = self.vgg.forward(img)
-                    loss = loss_func(pred, labels)
+                    loss = loss_func(pred, labels).to(self.device)
                     loss_a += loss
                     opt.zero_grad()
                     loss.backward()
                     opt.step()
+                scheduler.step()
                 loss_t = 0
                 with torch.no_grad():
                     for img, labels in test_loader:
