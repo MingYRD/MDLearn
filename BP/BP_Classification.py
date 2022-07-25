@@ -236,8 +236,8 @@ y_test = data_test.iloc[:, 0:1]
 # X_test = normalize_MM(X_test)
 X_test = np.asarray(X_test.values)
 y_test = np.asarray(y_test.values)
-n = 300
-bpc = BP_C(q=3, eta=0.01, max_iter=n)
+n = 200
+bpc = BP_C(q=16, eta=0.01, max_iter=n)
 bpc.init_params(X_train, X_test)
 bpc.bp_train(X_train, y_train, X_test, y_test)
 # #
@@ -252,7 +252,7 @@ bpc.bp_train(X_train, y_train, X_test, y_test)
 # # ax.set_ylabel('TPR')
 # # ax.set_title('ROC Curve-Compared')
 # # plt.show()
-# ek, ek_t = bpc.get_ek_s()
+ek, ek_t = bpc.get_ek_s()
 ans, y_pred, y_pro = bpc.predict(X_test, y_test)
 print(ans)
 # print(y_pred)
@@ -260,7 +260,7 @@ print(ans)
 #
 # fig, ax = plt.subplots(figsize=(12, 8))
 # ax.plot(x, ek, 'b', label='Train')
-# # ax.plot(x, ek_t, 'g', label='Test')
+# ax.plot(x, ek_t, 'g', label='Test')
 # ax.legend(loc=2)
 # ax.set_xlabel('Iter Number')
 # ax.set_ylabel('Ek')

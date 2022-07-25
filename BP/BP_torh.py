@@ -70,10 +70,10 @@ x_test = torch.FloatTensor(test_x)
 y_test = torch.LongTensor(test_y)
 
 n_features = X_train.shape[1]
-n_hidden = 15
+n_hidden = 16
 n_out = 2
-lr = 0.006
-epochs = 600
+lr = 0.01
+epochs = 200
 bp = BPNet(n_features, n_hidden, n_out)
 optimizer = torch.optim.Adam(bp.parameters(), lr=lr)
 loss_fun = torch.nn.CrossEntropyLoss()

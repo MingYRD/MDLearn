@@ -32,14 +32,13 @@ y_test = data_test.iloc[:, 0:1]
 # X_test = normalize_MM(X_test)
 X_test = np.asarray(X_test.values)
 y_test = np.asarray(y_test.values)
-n = 400
+n = 200
 
 every_num = []
 every_num.append(8)
 every_num.append(15)
-every_num.append(10)
 every_num.append(1)
-bpc = BP_G(eta=0.006, hide_every_num=every_num, max_iter=n, hide_num=2)
+bpc = BP_G(eta=0.01, hide_every_num=every_num, max_iter=n, hide_num=1)
 bpc.init_params(X_train)
 bpc.bp_train(X_train, X_test, y_train)
 ans, y_pred, y_pro = bpc.predict(X_test, y_test)
