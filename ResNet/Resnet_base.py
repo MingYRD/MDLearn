@@ -1,54 +1,56 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import torchvision
-from matplotlib import pyplot as plt
-from torch.utils.data import DataLoader
 import time
-from tqdm import tqdm
 from alive_progress import alive_bar
-from inception_model import Inception
+from ResNet_block import resnet_block
 
-class inception_base(nn.Module):
+class resnet_base(nn.Module):
 
     def __init__(self):
-        super(inception_base, self).__init__()
+        super(resnet_base, self).__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
+            # nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3),
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
-        self.conv2 = nn.Sequential(
-            Inception(64, 32, [48, 64], [8, 8, 16], 16),
-            Inception(128, 64, [96, 128], [16, 16, 32], 32),
-            Inception(256, 64, [96, 128], [16, 16, 32], 32),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            Inception(256, 64, [96, 128], [16, 16, 32], 32),
-            Inception(256, 128, [192, 256], [32, 32, 64], 64),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
+
+        self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
+        self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
+        self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 2))
+        self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 2))
+
         self.FC = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.Linear(512*4*4, 512),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5),
-            nn.Linear(512, 256),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5),
-            nn.Linear(256, 10)
+            nn.Linear(512, 10)
         )
+
+    def make_resnet_block(self, input_channels, num_channels, num_residuals, first_block=False):
+        blk = []
+        for i in range(num_residuals):
+            if i == 0 and not first_block:
+                blk.append(resnet_block(input_channels, num_channels, is1x1=True, s=2))
+            else:
+                blk.append(resnet_block(num_channels, num_channels))
+        return blk
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
         return self.FC(x)
 
-class Inception_test:
+class resnet_test:
 
     def __init__(self, lr=0.01, epochs=10):
         self.lr = lr
         self.epochs = epochs
-        self.inc = inception_base()
+        self.inc = resnet_base()
         self.old_time = 0
         self.current_time = 0
         self.ek = []

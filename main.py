@@ -105,8 +105,3 @@
 #             ans += 1
 # print('ACC', ans / k)
 # print('Time'+str(current_time - old_time)+'s')
-combination = {
-            'A': [1,2,3],
-            'A - LRN': ['M',3,4]
-        }
-print(combination)

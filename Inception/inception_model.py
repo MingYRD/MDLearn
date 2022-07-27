@@ -8,31 +8,35 @@ class Inception(nn.Module):
         # self.out = c1+c2[1]+c3[1]+c4
         self.p1 = nn.Sequential(
             nn.Conv2d(in_channels, c1, kernel_size=1),
-            # nn.BatchNorm2d(c1),
+            nn.BatchNorm2d(c1),
             nn.ReLU(inplace=True)
         )
 
         self.p2 = nn.Sequential(
             nn.Conv2d(in_channels, c2[0], kernel_size=1),
-            # nn.BatchNorm2d(c2[0]),
+            nn.BatchNorm2d(c2[0]),
             nn.ReLU(inplace=True),
-            nn.Conv2d(c2[0], c2[1], kernel_size=3, padding=1),
-            # nn.BatchNorm2d(c2[1]),
+            nn.Conv2d(c2[0], c2[1], kernel_size=(3, 3), padding=1),
+            # nn.Conv2d(c2[0], c2[1], kernel_size=(1, 3), padding=(0, 1)),
+            nn.BatchNorm2d(c2[1]),
             nn.ReLU(inplace=True)
         )
 
         self.p3 = nn.Sequential(
             nn.Conv2d(in_channels, c3[0], kernel_size=1),
-            # nn.BatchNorm2d(c3[0]),
+            nn.BatchNorm2d(c3[0]),
             nn.ReLU(inplace=True),
-            nn.Conv2d(c3[0], c3[1], kernel_size=5, padding=2),
-            # nn.BatchNorm2d(c3[1]),
+            nn.Conv2d(c3[0], c3[1], kernel_size=3, padding=1),
+            nn.BatchNorm2d(c3[1]),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(c3[1], c3[2], kernel_size=3, padding=1),
+            nn.BatchNorm2d(c3[2]),
             nn.ReLU(inplace=True)
         )
         self.p4 = nn.Sequential(
             nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
             nn.Conv2d(in_channels, c4, kernel_size=1),
-            # nn.BatchNorm2d(c4),
+            nn.BatchNorm2d(c4),
             nn.ReLU(inplace=True)
         )
 
