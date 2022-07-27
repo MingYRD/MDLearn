@@ -7,82 +7,48 @@ from torch.utils.data import DataLoader
 import time
 from tqdm import tqdm
 from alive_progress import alive_bar
-from Inception.inception_model import Inception
-"""
-data pre
-"""
+from inception_model import Inception
 
-# train_data = torchvision.datasets.MNIST(
-#     root="data",
-#     download=True,
-#     train=True,
-#     transform=torchvision.transforms.ToTensor()
-# )
-# test_data = torchvision.datasets.MNIST(
-#     root="data",
-#     download=True,
-#     train=False,
-#     transform=torchvision.transforms.ToTensor()
-# )
-#
-# train_dataloader = DataLoader(train_data, batch_size=64, shuffle=True)
-# test_dataloader = DataLoader(test_data, batch_size=64, shuffle=False)
-
-# cn = 1
-# for img, labels in train_dataloader:
-#     img = img[0]  # 若出错可改成img = image[0].cuda 试试
-#     img = img.numpy()  # FloatTensor转为ndarray
-#     img = np.transpose(img, (1, 2, 0))  # 把channel那一维放到最后
-#     # 显示图片
-#     plt.imshow(img)
-#     plt.show()
-#     cn += 1
-#     if cn > 6:
-#         break
-#
-
-"""
-data solve
-"""
-
-
-class cnn_lx(torch.nn.Module):
+class inception_base(nn.Module):
 
     def __init__(self):
-        super(cnn_lx, self).__init__()
-        self.net = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=16,
-                      kernel_size=(3, 3), stride=(1, 1),
-                      padding=1),
-            nn.BatchNorm2d(16),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(16, 64, 3, 1, 1),
+        super(inception_base, self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
             nn.BatchNorm2d(64),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(64, 128, 3, 1, 1),
-            nn.BatchNorm2d(128),
-            nn.MaxPool2d(2, stride=2),
-            nn.Conv2d(128, 256, 3, 1, 1),
-            nn.BatchNorm2d(256),
-            nn.MaxPool2d(2, stride=2),
-            nn.Flatten(),  # 压缩为1维
-            nn.Linear(256 * 2 * 2, 512),
-            nn.ReLU(inplace=True),  # 激励函数
+            nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+        self.conv2 = nn.Sequential(
+            Inception(64, 32, [48, 64], [8, 16], 16),
+            Inception(128, 64, [96, 128], [16,  32], 32),
+            Inception(256, 64, [96, 128], [16,  32], 32),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            Inception(256, 64, [96, 128], [16,  32], 32),
+            Inception(256, 128, [192, 256], [32, 64], 64),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        self.FC = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512*4*4, 512),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
             nn.Linear(512, 256),
             nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
             nn.Linear(256, 10)
         )
 
     def forward(self, x):
-        return self.net(x)
+        x = self.conv1(x)
+        x = self.conv2(x)
+        return self.FC(x)
 
+class Inception_test:
 
-class cnn_train:
-
-    def __init__(self, lr=0.1, epochs=10, cnn=None):
+    def __init__(self, lr=0.01, epochs=10):
         self.lr = lr
         self.epochs = epochs
-        self.cnn = cnn
+        self.inc = inception_base()
         self.old_time = 0
         self.current_time = 0
         self.ek = []
@@ -92,10 +58,9 @@ class cnn_train:
         self.device0 = torch.device('cpu')
 
     def train(self, train_dataloader, test_dataloader):
+        self.inc = self.inc.to(self.device)
 
-        self.cnn = self.cnn.to(self.device)
-
-        opt = torch.optim.SGD(self.cnn.parameters(), lr=self.lr, momentum=0.9, weight_decay=0.001)
+        opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9, weight_decay=0.001)
         loss_fun = torch.nn.CrossEntropyLoss()
         scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
 
@@ -106,7 +71,7 @@ class cnn_train:
                 for img, labels in train_dataloader:
                     img = img.to(self.device)
                     labels = labels.to(self.device)
-                    out = self.cnn.forward(img)
+                    out = self.inc.forward(img)
                     loss = loss_fun(out, labels)
                     loss_train += loss
                     opt.zero_grad()
@@ -118,7 +83,7 @@ class cnn_train:
                     for img, labels in test_dataloader:
                         img = img.to(self.device)
                         labels = labels.to(self.device)
-                        outputs = self.cnn.forward(img)
+                        outputs = self.inc.forward(img)
                         loss = loss_fun(outputs, labels)
                         total_loss += loss  # 累计误差
                 self.ek.append(loss_train.to(self.device0))
@@ -136,7 +101,7 @@ class cnn_train:
         k = 0
         for img, labels in test_dataloader:
             img = img.to(self.device)
-            outputs = self.cnn.forward(img)
+            outputs = self.inc.forward(img)
             outputs = outputs.to(self.device0)
             s_ans = np.argmax(outputs.detach().numpy(), axis=1)
             y_t = labels.detach().numpy()
@@ -148,14 +113,5 @@ class cnn_train:
 
     def get_ek(self):
         return self.ek, self.ek_t
-
-
-
-
-
-
-
-
-
 
 

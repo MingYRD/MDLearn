@@ -41,7 +41,7 @@ class vgg_model(nn.Module):
                     self.layers += [nn.Conv2d(in_channels=pre, out_channels=p, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(p), nn.ReLU(inplace=True)]
                 pre = p
             elif p == 'LRN':
-                continue
+                self.layers += [nn.LocalResponseNorm(size=2)]
             else:
                 self.layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
         self.conv = nn.Sequential(*self.layers)
