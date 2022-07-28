@@ -9,7 +9,7 @@ class resnet_block(nn.Module):
         self.conv2 = nn.Conv2d(num_channels, num_channels, kernel_size=3, padding=1)
 
         if is1x1:
-            self.conv3 = nn.Conv2d(input_channels, num_channels, kernel_size=1, stride=s)
+            self.conv3 = nn.Conv2d(input_channels, num_channels, kernel_size=1, stride=s, bias=False)
         else:
             self.conv3 = None
 

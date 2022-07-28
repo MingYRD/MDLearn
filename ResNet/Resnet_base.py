@@ -11,10 +11,10 @@ class resnet_base(nn.Module):
         super(resnet_base, self).__init__()
         self.conv1 = nn.Sequential(
             # nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3),
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            # nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
 
         self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
@@ -62,7 +62,7 @@ class resnet_test:
     def train(self, train_dataloader, test_dataloader):
         self.inc = self.inc.to(self.device)
 
-        opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9, weight_decay=0.001)
+        opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9, weight_decay=5e-4)
         loss_fun = torch.nn.CrossEntropyLoss()
         scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
 

@@ -7,9 +7,12 @@ from Resnet_base import resnet_test
 
 
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
-                                          transforms.ToTensor(),transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                      transforms.RandomCrop(32, padding=4),
+                                      transforms.ToTensor(),
+                                      transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]
+                                     )
 transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
 train_data = torchvision.datasets.CIFAR10(
     root="../NN/data_CIFAR",
@@ -28,8 +31,8 @@ train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=128, shuffle=False)
 
 
-lr = 0.01
-epochs = 50
+lr = 0.1
+epochs = 250
 inc = resnet_test(lr, epochs)
 inc.train(train_dataloader, test_dataloader)
 ek, ek_t = inc.get_ek()
