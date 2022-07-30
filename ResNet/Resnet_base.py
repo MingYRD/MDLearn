@@ -17,15 +17,15 @@ class resnet_base(nn.Module):
             # nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
 
-        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
-        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
-        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 2))
-        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 2))
+        self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
+        self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
+        self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 2))
+        self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 2))
 
-        self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
-        self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4))
-        self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 6))
-        self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 3))
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 6))
+        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 3))
 
         self.FC = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
@@ -38,6 +38,7 @@ class resnet_base(nn.Module):
         for i in range(num_residuals):
             if i == 0 and not first_block:
                 blk.append(resnet_block(input_channels, num_channels, is1x1=True, s=2))
+                # blk.append(resnet_block(input_channels, num_channels, s=2))
             else:
                 blk.append(resnet_block(num_channels, num_channels))
         return blk
@@ -60,6 +61,7 @@ class resnet_test:
         self.current_time = 0
         self.ek = []
         self.ek_t = []
+        self.error = []
 
         # self.device = torch.device('mps')
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -123,9 +125,10 @@ class resnet_test:
                 print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
                 print("第{}次训练的Loss:{}".format(epoch + 1, loss_train))
                 pre_acc = self.predict(test_dataloader)
+                self.error.append(1-pre_acc)
                 if pre_acc > acc_arr:
                     acc_arr = pre_acc
-                    torch.save(self.inc.state_dict(), "inc_resnet.pkl")
+                    torch.save(self.inc.state_dict(), "inc_resnet_18.pth")
         self.current_time = time.time()
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")
@@ -148,5 +151,8 @@ class resnet_test:
 
     def get_ek(self):
         return self.ek, self.ek_t
+
+    def get_error(self):
+        return self.error
 
 

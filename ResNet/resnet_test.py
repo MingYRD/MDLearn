@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torchvision
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
@@ -32,11 +33,20 @@ test_dataloader = DataLoader(test_data, batch_size=256, shuffle=False)
 
 
 lr = 0.1
-epochs = 250
+epochs = 210
 inc = resnet_test(lr, epochs)
 inc.train(train_dataloader, test_dataloader)
-# ek, ek_t = inc.get_ek()
+
+ek, ek_t = inc.get_ek()
+err = inc.get_error()
+ek = np.array(ek.detach().numpy())
+ek_t = np.array(ek_t.detach().numpy())
+err = np.array(err.detach().numpy())
+np.save('ek_18.npy', ek)
+np.save('ek_t_18.npy', ek_t)
+np.save('err_18.npy', err)
 #
+
 # for i in range(len(ek)):
 #     ek[i] = ek[i].detach().numpy()
 #     ek_t[i] = ek_t[i].detach().numpy()
