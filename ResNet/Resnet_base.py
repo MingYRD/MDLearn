@@ -5,32 +5,49 @@ import time
 from alive_progress import alive_bar
 from ResNet_block import resnet_block
 
+
+
 class resnet_base(nn.Module):
 
     def __init__(self):
         super(resnet_base, self).__init__()
         self.conv1 = nn.Sequential(
             # nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3),
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(64),
+            # nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1, bias=False),
+            # nn.BatchNorm2d(64),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
             # nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
-
-        self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
-        self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
-        self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 2))
-        self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 2))
-
+        # resnet-18
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 2))
+        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 2))
+        # resnet - 34
         # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
         # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4))
         # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 6))
         # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 3))
 
+        # resnet - 20
+        self.conv2 = nn.Sequential(*self.make_resnet_block(16, 16, 3, first_block=True))
+        self.conv3 = nn.Sequential(*self.make_resnet_block(16, 32, 3))
+        self.conv4 = nn.Sequential(*self.make_resnet_block(32, 64, 3))
+        # self.conv5 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
+
+        # resnet - 32
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 4))
+        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 4))
+
         self.FC = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.Linear(512, 10)
+            # nn.Linear(512, 10)
+            nn.Linear(64, 10)
         )
 
     def make_resnet_block(self, input_channels, num_channels, num_residuals, first_block=False):
@@ -50,6 +67,7 @@ class resnet_base(nn.Module):
         x = self.conv4(x)
         x = self.conv5(x)
         return self.FC(x)
+
 
 class resnet_test:
 
@@ -91,7 +109,8 @@ class resnet_test:
     def train(self, train_dataloader, test_dataloader):
         self.inc = self.inc.to(self.device)
 
-        opt = torch.optim.SGD(self.inc.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9, weight_decay=1e-4)
+        opt = torch.optim.SGD(self.inc.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
+                              weight_decay=1e-4)
         loss_fun = torch.nn.CrossEntropyLoss()
         # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
         acc_arr = 0
@@ -125,10 +144,10 @@ class resnet_test:
                 print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
                 print("第{}次训练的Loss:{}".format(epoch + 1, loss_train))
                 pre_acc = self.predict(test_dataloader)
-                self.error.append(1-pre_acc)
+                self.error.append(1 - pre_acc)
                 if pre_acc > acc_arr:
                     acc_arr = pre_acc
-                    torch.save(self.inc.state_dict(), "inc_resnet_18.pth")
+                    torch.save(self.inc.state_dict(), "inc_resnet_20.pth")
         self.current_time = time.time()
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")
@@ -154,5 +173,3 @@ class resnet_test:
 
     def get_error(self):
         return self.error
-
-

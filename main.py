@@ -105,3 +105,5 @@
 #             ans += 1
 # print('ACC', ans / k)
 # print('Time'+str(current_time - old_time)+'s')
+
+print("Hello")

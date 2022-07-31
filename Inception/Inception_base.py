@@ -5,7 +5,6 @@ import torchvision
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 import time
-from tqdm import tqdm
 from alive_progress import alive_bar
 from inception_model import Inception
 
