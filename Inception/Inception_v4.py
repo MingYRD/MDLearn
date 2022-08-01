@@ -68,10 +68,10 @@ class Stem_Res1(nn.Module):
     def __init__(self):
         super(Stem_Res1, self).__init__()
         self.stem = nn.Sequential(
-            BN_Conv2d(3, 32, 3, 2, 0, bias=False),
-            BN_Conv2d(32, 32, 3, 1, 0, bias=False),
+            # BN_Conv2d(3, 32, 3, 2, 0, bias=False),
+            BN_Conv2d(3, 32, 3, 1, 0, bias=False),
             BN_Conv2d(32, 64, 3, 1, 1, bias=False),
-            nn.MaxPool2d(3, 2, 0),
+            # nn.MaxPool2d(3, 2, 0),
             BN_Conv2d(64, 80, 1, 1, 0, bias=False),
             BN_Conv2d(80, 192, 3, 1, 0, bias=False),
             BN_Conv2d(192, 256, 3, 2, 0, bias=False)
@@ -383,7 +383,7 @@ class Inception(nn.Module):
             for _ in range(2):
                 layers.append(Inception_A(384, 96, 96, 64, 96, 64, 96))
         elif self.version == "res1":
-            for _ in range(5):
+            for _ in range(2):
                 layers.append(Inception_A_res(256, 32, 32, 32, 32, 32, 32, 256))
         else:
             for _ in range(5):
@@ -405,7 +405,7 @@ class Inception(nn.Module):
                 layers.append(Inception_B(1024, 128, 384, 192, 224, 256,
                                           192, 192, 224, 224, 256))  # 1024
         elif self.version == "res1":
-            for _ in range(10):
+            for _ in range(4):
                 layers.append(Inception_B_res(896, 128, 128, 128, 128, 896))  # 896
         else:
             for _ in range(10):
@@ -426,7 +426,7 @@ class Inception(nn.Module):
             for _ in range(1):
                 layers.append(Inception_C(1536, 256, 256, 384, 256, 384, 448, 512, 256))
         elif self.version == "res1":
-            for _ in range(5):
+            for _ in range(2):
                 layers.append(Inception_C_res(1792, 192, 192, 192, 192, 1792))
         else:
             for _ in range(5):

@@ -53,8 +53,8 @@ for i in range(len(ek)):
     ek_t[i] = ek_t[i].detach().numpy()
 # for i in range(len(err)):
 #     err[i] = err[i].detach().numpy()
-ek = np.array(ek.detach().numpy())
-ek_t = np.array(ek_t.detach().numpy())
+ek = np.array(ek)
+ek_t = np.array(ek_t)
 err = np.array(err)
 np.save('ek_20.npy', ek)
 np.save('ek_t_20.npy', ek_t)

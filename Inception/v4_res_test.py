@@ -14,8 +14,8 @@ os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
 os.environ['MKL_NUM_THREADS'] = str(cpu_num)
 os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
 os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
-os.environ["CUDA_VISIBLE_DEVICES"] = '5'
-os.environ['CUDA_LAUNCH_BLOCKING'] = '5'
+os.environ["CUDA_VISIBLE_DEVICES"] = '6'
+os.environ['CUDA_LAUNCH_BLOCKING'] = '6'
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
                                       transforms.RandomCrop(32, padding=4),
                                       transforms.ToTensor(),
@@ -42,8 +42,8 @@ test_dataloader = DataLoader(test_data, batch_size=256, shuffle=False)
 
 
 lr = 0.1
-epochs = 220
-version = 'v4'
+epochs = 200
+version = 'res1'
 inc = inception_test(lr, epochs, version)
 inc.train(train_dataloader, test_dataloader)
 
@@ -54,12 +54,12 @@ for i in range(len(ek)):
     ek_t[i] = ek_t[i].detach().numpy()
 # for i in range(len(err)):
 #     err[i] = err[i].detach().numpy()
-ek = np.array(ek.detach().numpy())
-ek_t = np.array(ek_t.detach().numpy())
+ek = np.array(ek)
+ek_t = np.array(ek_t)
 err = np.array(err)
-np.save('inc_Inception_v4.npy', ek)
-np.save('inc_Inception_v4.npy', ek_t)
-np.save('inc_Inception_v4.npy', err)
+np.save('inc_Inception_res1.npy', ek)
+np.save('inc_Inception_res1.npy', ek_t)
+np.save('inc_Inception_res1.npy', err)
 #
 
 
