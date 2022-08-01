@@ -386,7 +386,7 @@ class Inception(nn.Module):
             for _ in range(2):
                 layers.append(Inception_A_res(256, 32, 32, 32, 32, 32, 32, 256))
         else:
-            for _ in range(5):
+            for _ in range(3):
                 layers.append(Inception_A_res(384, 32, 32, 32, 32, 48, 64, 384))
         return nn.Sequential(*layers)
 
@@ -408,7 +408,7 @@ class Inception(nn.Module):
             for _ in range(4):
                 layers.append(Inception_B_res(896, 128, 128, 128, 128, 896))  # 896
         else:
-            for _ in range(10):
+            for _ in range(6):
                 layers.append(Inception_B_res(1152, 192, 128, 160, 192, 1152))  # 1152
         return nn.Sequential(*layers)
 
@@ -450,7 +450,7 @@ class Inception(nn.Module):
 
 class inception_test:
 
-    def __init__(self, lr=0.01, epochs=10, version='v4', num_classes=10):
+    def __init__(self, lr=0.01, epochs=10, version='res1', num_classes=10):
         self.lr = lr
         self.epochs = epochs
         self.inc = Inception(version, num_classes)
@@ -526,7 +526,7 @@ class inception_test:
                 self.error.append(1 - pre_acc)
                 if pre_acc > acc_arr:
                     acc_arr = pre_acc
-                    torch.save(self.inc.state_dict(), "inc_Inception_v4.pth")
+                    torch.save(self.inc.state_dict(), "inc_Inception_res2.pth")
         self.current_time = time.time()
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")
