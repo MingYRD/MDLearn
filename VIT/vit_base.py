@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from alive_progress import alive_bar
 from vit_pytorch import ViT
+# from pytorch_pretrained_vit import ViT
 # from vit_start import ViT
 
 class vit_test:
@@ -14,13 +15,15 @@ class vit_test:
                 image_size=32,
                 patch_size=4,
                 num_classes=10,
-                dim=512,
-                depth=1,
-                heads=1,
-                mlp_dim=256,
+                dim=48,  # 全连接层维度
+                depth=4,  # transformer number
+                heads=6,  # 多头注意力的个数
+                mlp_dim=192,  # MLP维度放大4倍
                 dropout=0.1,
                 emb_dropout=0.1
         )
+        vit = torch.load('vit.pth')
+        self.v.load_state_dict(vit)
         self.old_time = 0
         self.current_time = 0
         self.ek = []
@@ -58,7 +61,7 @@ class vit_test:
         opt = torch.optim.SGD(self.v.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
                               weight_decay=1e-4)
         loss_fun = torch.nn.CrossEntropyLoss()
-        # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
+        # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=40, gamma=0.5, last_epoch=-1)
         acc_arr = 0
         self.old_time = time.time()
         with alive_bar(self.epochs) as bar:
@@ -93,7 +96,7 @@ class vit_test:
                 self.error.append(1 - pre_acc)
                 if pre_acc > acc_arr:
                     acc_arr = pre_acc
-                    torch.save(self.v.state_dict(), "vit.pth")
+                    torch.save(self.v.state_dict(), "vit2.pth")
         self.current_time = time.time()
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")

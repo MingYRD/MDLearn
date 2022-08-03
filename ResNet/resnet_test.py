@@ -41,7 +41,7 @@ train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=256, shuffle=False)
 
 
-lr = 0.1
+lr = 0.01
 epochs = 220
 inc = resnet_test(lr, epochs)
 inc.train(train_dataloader, test_dataloader)
@@ -56,9 +56,9 @@ for i in range(len(ek)):
 ek = np.array(ek)
 ek_t = np.array(ek_t)
 err = np.array(err)
-np.save('ek_20.npy', ek)
-np.save('ek_t_20.npy', ek_t)
-np.save('err_20.npy', err)
+np.save('ek_18.npy', ek)
+np.save('ek_t_18.npy', ek_t)
+np.save('err_18.npy', err)
 #
 
 
