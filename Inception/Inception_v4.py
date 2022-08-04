@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import numpy as np
 import time
 from alive_progress import alive_bar
+from tqdm import tqdm
+
 
 class BN_Conv2d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, padding, bias):
@@ -494,42 +496,39 @@ class inception_test:
         # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
         acc_arr = 0
         self.old_time = time.time()
-        with alive_bar(self.epochs) as bar:
-            for epoch in range(self.epochs):
-                loss_train = 0
-                for img, labels in train_dataloader:
+        for epoch in range(self.epochs):
+            loss_train = 0
+            loop = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
+            loop.set_description(f'Epoch [{epoch + 1}/{self.epochs}]')
+            for index, (img, labels) in loop:
+                img = img.to(self.device)
+                labels = labels.to(self.device)
+                out = self.inc.forward(img)
+                loss = loss_fun(out, labels)
+                loss_train += loss
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+                # scheduler.step()
+            total_loss = 0  # 保存这次测试总的loss
+            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+                for img, labels in test_dataloader:
                     img = img.to(self.device)
                     labels = labels.to(self.device)
-                    out = self.inc.forward(img)
-                    loss = loss_fun(out, labels)
-                    loss_train += loss
-                    opt.zero_grad()
-                    loss.backward()
-                    opt.step()
-                # scheduler.step()
-                total_loss = 0  # 保存这次测试总的loss
-                with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                    for img, labels in test_dataloader:
-                        img = img.to(self.device)
-                        labels = labels.to(self.device)
-                        outputs = self.inc.forward(img)
-                        loss = loss_fun(outputs, labels)
-                        total_loss += loss  # 累计误差
-                self.ek.append(loss_train.to(self.device0))
-                self.ek_t.append(total_loss.to(self.device0))
-                curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
-                self.update_lr(opt, curr_lr)
-                bar()
-                print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
-                print("第{}次训练的Loss:{}".format(epoch + 1, loss_train))
-                pre_acc = self.predict(test_dataloader)
-                self.error.append(1 - pre_acc)
-                if pre_acc > acc_arr:
-                    acc_arr = pre_acc
-                    torch.save(self.inc.state_dict(), "inc_Inception_res2.pth")
-        self.current_time = time.time()
-        # print('Time:' + str(self.current_time - self.old_time) + 's')
-        # torch.save(self.cnn, "cnn_digit.nn")
+                    outputs = self.inc.forward(img)
+                    loss = loss_fun(outputs, labels)
+                    total_loss += loss  # 累计误差
+            self.ek.append(loss_train.to(self.device0))
+            self.ek_t.append(total_loss.to(self.device0))
+            curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
+            self.update_lr(opt, curr_lr)
+
+            pre_acc = self.predict(test_dataloader)
+            print("Loss:{} ACC:{}".format(loss_train, pre_acc))
+            self.error.append(1 - pre_acc)
+            if pre_acc > acc_arr:
+                acc_arr = pre_acc
+                torch.save(self.inc.state_dict(), "inc_Inception_res2.pth")
 
     def predict(self, test_dataloader):
         ans = 0

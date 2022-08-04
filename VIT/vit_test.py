@@ -1,4 +1,3 @@
-from pytorch_pretrained_vit import ViT
 import torch
 from vit_base import vit_test
 import numpy as np
@@ -13,8 +12,8 @@ os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
 os.environ['MKL_NUM_THREADS'] = str(cpu_num)
 os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
 os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
-os.environ["CUDA_VISIBLE_DEVICES"] = '4'
-os.environ['CUDA_LAUNCH_BLOCKING'] = '4'
+os.environ["CUDA_VISIBLE_DEVICES"] = '7'
+os.environ['CUDA_LAUNCH_BLOCKING'] = '7'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 device0 = torch.device('cpu')
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
@@ -56,7 +55,7 @@ for i in range(len(ek)):
 ek = np.array(ek)
 ek_t = np.array(ek_t)
 err = np.array(err)
-np.save('vit2_ek.npy', ek)
-np.save('vit2_ekt.npy', ek_t)
-np.save('vit2_err.npy', err)
+np.save('vit3_ek.npy', ek)
+np.save('vit3_ekt.npy', ek_t)
+np.save('vit3_err.npy', err)
 

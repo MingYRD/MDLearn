@@ -58,8 +58,8 @@ class Attention(nn.Module):
         ) if project_out else nn.Identity()
 
     def forward(self, x):
-        qkv = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), qkv)
+        qkv = self.to_qkv(x).chunk(3, dim=-1)  # qkv为元组，len:3, 每个的形状为 batch_size，197，768
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), qkv)  # 按head个数打到各个子空间
 
         dots = torch.matmul(q, k.transpose(-1, -2)) * self.scale
 

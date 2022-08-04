@@ -5,7 +5,7 @@
       <paths name="dmy@172.21.144.46:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/storage/node3/dmy/Test" local="$PROJECT_DIR$" />
+            <mapping deploy="/storage/node3/dmy/Learn" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

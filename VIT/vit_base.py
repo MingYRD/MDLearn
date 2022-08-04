@@ -1,11 +1,11 @@
 import time
 import numpy as np
 import torch
-from alive_progress import alive_bar
+
 from vit_pytorch import ViT
 # from pytorch_pretrained_vit import ViT
 # from vit_start import ViT
-
+from tqdm import tqdm
 class vit_test:
 
     def __init__(self, lr=0.01, epochs=10):
@@ -16,14 +16,14 @@ class vit_test:
                 patch_size=4,
                 num_classes=10,
                 dim=48,  # 全连接层维度
-                depth=4,  # transformer number
-                heads=6,  # 多头注意力的个数
+                depth=6,  # transformer number
+                heads=10,  # 多头注意力的个数
                 mlp_dim=192,  # MLP维度放大4倍
                 dropout=0.1,
                 emb_dropout=0.1
         )
-        vit = torch.load('vit.pth')
-        self.v.load_state_dict(vit)
+        # vit = torch.load('vit2.pth')
+        # self.v.load_state_dict(vit)
         self.old_time = 0
         self.current_time = 0
         self.ek = []
@@ -60,44 +60,47 @@ class vit_test:
 
         opt = torch.optim.SGD(self.v.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
                               weight_decay=1e-4)
+        # opt = torch.optim.SGD(self.v.parameters(), lr=self.lr, momentum=0.9,
+        #                       weight_decay=1e-4)
         loss_fun = torch.nn.CrossEntropyLoss()
-        # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=40, gamma=0.5, last_epoch=-1)
+        # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
         acc_arr = 0
+        pre_acc = 0
         self.old_time = time.time()
-        with alive_bar(self.epochs) as bar:
-            for epoch in range(self.epochs):
-                loss_train = 0
-                for img, labels in train_dataloader:
+
+        for epoch in range(self.epochs):
+            loss_train = 0
+            loop = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
+            loop.set_description(f'Epoch [{epoch+1}/{self.epochs}]')
+            for index, (img, labels) in loop:
+                img = img.to(self.device)
+                labels = labels.to(self.device)
+                out = self.v(img)
+                loss = loss_fun(out, labels)
+                loss_train += loss
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+            # scheduler.step()
+            total_loss = 0  # 保存这次测试总的loss
+            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+                for img, labels in test_dataloader:
                     img = img.to(self.device)
                     labels = labels.to(self.device)
-                    out = self.v(img)
-                    loss = loss_fun(out, labels)
-                    loss_train += loss
-                    opt.zero_grad()
-                    loss.backward()
-                    opt.step()
-                # scheduler.step()
-                total_loss = 0  # 保存这次测试总的loss
-                with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                    for img, labels in test_dataloader:
-                        img = img.to(self.device)
-                        labels = labels.to(self.device)
-                        outputs = self.v(img)
-                        loss = loss_fun(outputs, labels)
-                        total_loss += loss  # 累计误差
-                self.ek.append(loss_train.to(self.device0))
-                self.ek_t.append(total_loss.to(self.device0))
-                curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
-                self.update_lr(opt, curr_lr)
-                bar()
-                print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
-                print("第{}次训练的Loss:{}".format(epoch + 1, loss_train))
-                pre_acc = self.predict(test_dataloader)
-                self.error.append(1 - pre_acc)
-                if pre_acc > acc_arr:
-                    acc_arr = pre_acc
-                    torch.save(self.v.state_dict(), "vit2.pth")
-        self.current_time = time.time()
+                    outputs = self.v(img)
+                    loss = loss_fun(outputs, labels)
+                    total_loss += loss  # 累计误差
+            self.ek.append(loss_train.to(self.device0))
+            self.ek_t.append(total_loss.to(self.device0))
+            # curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
+            # self.update_lr(opt, curr_lr)
+            pre_acc = self.predict(test_dataloader)
+            # print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
+            print("Loss:{} ACC:{}".format(loss_train, pre_acc))
+            self.error.append(1 - pre_acc)
+            if pre_acc > acc_arr:
+                acc_arr = pre_acc
+                torch.save(self.v.state_dict(), "vit3.pth")
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")
 
@@ -114,7 +117,7 @@ class vit_test:
             for j in range(s_ans.shape[0]):
                 if s_ans[j] == y_t[j]:
                     ans += 1
-        print('ACC:', ans / k)
+        # print('ACC:', ans / k)
         return ans / k
 
     def get_ek(self):

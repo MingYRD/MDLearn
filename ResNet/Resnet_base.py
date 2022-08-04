@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 import time
-from alive_progress import alive_bar
+
+from tqdm import tqdm
+
 from ResNet_block import resnet_block
 
 
@@ -13,7 +15,7 @@ class resnet_base(nn.Module):
         super(resnet_base, self).__init__()
         self.conv1 = nn.Sequential(
             # nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3),
-            # nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
+            # nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1, bias=False),
             nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(),
@@ -34,12 +36,15 @@ class resnet_base(nn.Module):
         # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
         # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 3))
         # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 3))
-        # self.conv5 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
+
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(16, 16, 3, first_block=True))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(16, 32, 3))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(32, 64, 3))
 
         # resnet - 32
-        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
-        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4))
-        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 4))
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 5, first_block=True))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 5))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 5))
         # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 4))
 
         self.FC = nn.Sequential(
@@ -47,6 +52,7 @@ class resnet_base(nn.Module):
             nn.Flatten(),
             nn.Linear(512, 10)
             # nn.Linear(256, 10)
+            # nn.Linear(64, 10)
         )
 
     def make_resnet_block(self, input_channels, num_channels, num_residuals, first_block=False):
@@ -110,48 +116,49 @@ class resnet_test:
     def train(self, train_dataloader, test_dataloader):
         self.inc = self.inc.to(self.device)
 
-        # opt = torch.optim.SGD(self.inc.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
-        #                       weight_decay=1e-4)
-        opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9,
+        opt = torch.optim.SGD(self.inc.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
                               weight_decay=1e-4)
+        # opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9,
+        #                       weight_decay=1e-4)
         loss_fun = torch.nn.CrossEntropyLoss()
-        scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=40, gamma=0.5, last_epoch=-1)
+        # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=40, gamma=0.5, last_epoch=-1)
         acc_arr = 0
         self.old_time = time.time()
-        with alive_bar(self.epochs) as bar:
-            for epoch in range(self.epochs):
-                loss_train = 0
-                for img, labels in train_dataloader:
+        for epoch in range(self.epochs):
+            loss_train = 0
+            loop = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
+            loop.set_description(f'Epoch [{epoch + 1}/{self.epochs}]')
+            for index, (img, labels) in loop:
+                img = img.to(self.device)
+                labels = labels.to(self.device)
+                out = self.inc.forward(img)
+                loss = loss_fun(out, labels)
+                loss_train += loss
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+                # scheduler.step()
+            total_loss = 0  # 保存这次测试总的loss
+            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+                for img, labels in test_dataloader:
                     img = img.to(self.device)
                     labels = labels.to(self.device)
-                    out = self.inc.forward(img)
-                    loss = loss_fun(out, labels)
-                    loss_train += loss
-                    opt.zero_grad()
-                    loss.backward()
-                    opt.step()
-                scheduler.step()
-                total_loss = 0  # 保存这次测试总的loss
-                with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                    for img, labels in test_dataloader:
-                        img = img.to(self.device)
-                        labels = labels.to(self.device)
-                        outputs = self.inc.forward(img)
-                        loss = loss_fun(outputs, labels)
-                        total_loss += loss  # 累计误差
-                self.ek.append(loss_train.to(self.device0))
-                self.ek_t.append(total_loss.to(self.device0))
-                # curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
-                # self.update_lr(opt, curr_lr)
-                bar()
-                print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
-                print("第{}次训练的Loss:{}".format(epoch + 1, loss_train))
-                pre_acc = self.predict(test_dataloader)
-                self.error.append(1 - pre_acc)
-                if pre_acc > acc_arr:
-                    acc_arr = pre_acc
-                    torch.save(self.inc.state_dict(), "inc_resnet_18.pth")
-        self.current_time = time.time()
+                    outputs = self.inc.forward(img)
+                    loss = loss_fun(outputs, labels)
+                    total_loss += loss  # 累计误差
+            self.ek.append(loss_train.to(self.device0))
+            self.ek_t.append(total_loss.to(self.device0))
+            curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
+            self.update_lr(opt, curr_lr)
+
+            pre_acc = self.predict(test_dataloader)
+            # print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
+            print("Loss:{} ACC:{}".format(loss_train, pre_acc))
+            self.error.append(1 - pre_acc)
+            if pre_acc > acc_arr:
+                acc_arr = pre_acc
+                torch.save(self.inc.state_dict(), "inc_resnet_20.pth")
+
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")
 
@@ -168,7 +175,7 @@ class resnet_test:
             for j in range(s_ans.shape[0]):
                 if s_ans[j] == y_t[j]:
                     ans += 1
-        print('ACC:', ans / k)
+        # print('ACC:', ans / k)
         return ans / k
 
     def get_ek(self):
