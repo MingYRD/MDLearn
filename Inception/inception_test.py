@@ -6,10 +6,24 @@ from torchvision import transforms
 from Inception_base import Inception_test
 
 
+import os
+
+cpu_num = 2  # 这里设置成你想运行的CPU个数
+os.environ['OMP_NUM_THREADS'] = str(cpu_num)
+os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
+os.environ['MKL_NUM_THREADS'] = str(cpu_num)
+os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
+os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
+os.environ["CUDA_VISIBLE_DEVICES"] = '7'
+os.environ['CUDA_LAUNCH_BLOCKING'] = '7'
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
-                                          transforms.ToTensor(),transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                      transforms.RandomCrop(32, padding=4),
+                                      transforms.ColorJitter(0.5, 0.5, 0.5),  # 颜色变换
+                                      transforms.ToTensor(),
+                                      transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]
+                                     )
 transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
 train_data = torchvision.datasets.CIFAR10(
     root="../NN/data_CIFAR",
@@ -25,13 +39,15 @@ test_data = torchvision.datasets.CIFAR10(
 )
 
 train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
-test_dataloader = DataLoader(test_data, batch_size=128, shuffle=False)
-
+test_dataloader = DataLoader(test_data, batch_size=256, shuffle=False)
 
 lr = 0.1
-epochs = 100
+epochs = 200
 inc = Inception_test(lr, epochs)
 inc.train(train_dataloader, test_dataloader)
+err = inc.get_error()
+err = np.array(err)
+np.save('err_inception.npy', err)
 # ek, ek_t = inc.get_ek()
 #
 # for i in range(len(ek)):

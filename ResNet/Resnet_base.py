@@ -5,7 +5,7 @@ import time
 
 from tqdm import tqdm
 
-from ResNet_block import resnet_block
+from ResNet_block import resnet_block, resnet_block_d
 
 
 
@@ -47,6 +47,18 @@ class resnet_base(nn.Module):
         # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 5))
         # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 4))
 
+        # resnet - 50
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True, out_channels=32))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4, out_channels=96))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 6, out_channels=192))
+        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 3, out_channels=384))
+
+        # resnet - 101
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True, out_channels=32))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4, out_channels=96))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 23, out_channels=192))
+        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 3, out_channels=384))
+
         self.FC = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
@@ -55,14 +67,15 @@ class resnet_base(nn.Module):
             # nn.Linear(64, 10)
         )
 
-    def make_resnet_block(self, input_channels, num_channels, num_residuals, first_block=False):
+    def make_resnet_block(self, input_channels, num_channels, num_residuals, first_block=False, out_channels=64):
         blk = []
         for i in range(num_residuals):
             if i == 0 and not first_block:
                 blk.append(resnet_block(input_channels, num_channels, is1x1=True, s=2))
-                # blk.append(resnet_block(input_channels, num_channels, s=2))
+                # blk.append(resnet_block_d(input_channels, num_channels, is1x1=True, s=2, out_channels=out_channels))
             else:
                 blk.append(resnet_block(num_channels, num_channels))
+                # blk.append(resnet_block_d(num_channels, num_channels, out_channels=out_channels))
         return blk
 
     def forward(self, x):

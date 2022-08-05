@@ -15,8 +15,8 @@ from sklearn.metrics import classification_report
 #
 #
 # my data:
-data_train = pd.read_csv('../diabetes_train.txt', sep=' ', header=None)
-data_test = pd.read_csv('../diabetes_test.txt', sep=' ', header=None)
+data_train = pd.read_csv('../other/diabetes_train.txt', sep=' ', header=None)
+data_test = pd.read_csv('../other/diabetes_test.txt', sep=' ', header=None)
 data_train_l = data_train
 data_test_l = data_test
 

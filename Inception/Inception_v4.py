@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import time
-from alive_progress import alive_bar
+
 from tqdm import tqdm
 
 
@@ -410,7 +410,7 @@ class Inception(nn.Module):
             for _ in range(4):
                 layers.append(Inception_B_res(896, 128, 128, 128, 128, 896))  # 896
         else:
-            for _ in range(6):
+            for _ in range(7):
                 layers.append(Inception_B_res(1152, 192, 128, 160, 192, 1152))  # 1152
         return nn.Sequential(*layers)
 
@@ -511,15 +511,15 @@ class inception_test:
                 opt.step()
                 # scheduler.step()
             total_loss = 0  # 保存这次测试总的loss
-            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                for img, labels in test_dataloader:
-                    img = img.to(self.device)
-                    labels = labels.to(self.device)
-                    outputs = self.inc.forward(img)
-                    loss = loss_fun(outputs, labels)
-                    total_loss += loss  # 累计误差
+            # with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+            #     for img, labels in test_dataloader:
+            #         img = img.to(self.device)
+            #         labels = labels.to(self.device)
+            #         outputs = self.inc.forward(img)
+            #         loss = loss_fun(outputs, labels)
+            #         total_loss += loss  # 累计误差
             self.ek.append(loss_train.to(self.device0))
-            self.ek_t.append(total_loss.to(self.device0))
+            # self.ek_t.append(total_loss.to(self.device0))
             curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
             self.update_lr(opt, curr_lr)
 
@@ -543,7 +543,7 @@ class inception_test:
             for j in range(s_ans.shape[0]):
                 if s_ans[j] == y_t[j]:
                     ans += 1
-        print('ACC:', ans / k)
+        # print('ACC:', ans / k)
         return ans / k
 
     def get_ek(self):

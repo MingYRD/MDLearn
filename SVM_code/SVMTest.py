@@ -222,8 +222,8 @@ def predict(x_test, w, b):
 def normalize_f(data):
     return (data - data.mean())/data.std()
 
-data_train = np.loadtxt("../diabetes_train.txt")
-data_test = np.loadtxt("../diabetes_test.txt")
+data_train = np.loadtxt("../other/diabetes_train.txt")
+data_test = np.loadtxt("../other/diabetes_test.txt")
 x_train = data_train[:, 1:data_train.shape[1]]
 y_train = data_train[:, 0:1]
 x_train = normalize_f(x_train)

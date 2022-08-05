@@ -74,7 +74,7 @@ def K_means_cluster(x, n):
 def normalize_f(data):
     return (data - data.mean())/data.std()
 # # data = pd.read_csv("xigua.txt", header=None, names=['A', 'B'])
-data_train = pd.read_csv('../diabetes_train.txt', sep=' ', header=None)
+data_train = pd.read_csv('../other/diabetes_train.txt', sep=' ', header=None)
 # # data = pd.read_csv("wine.data", header=None)
 data_s = data_train.iloc[:, 1:data_train.shape[1]]
 data_y = data_train.iloc[:, 0:1]

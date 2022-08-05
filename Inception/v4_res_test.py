@@ -14,8 +14,8 @@ os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
 os.environ['MKL_NUM_THREADS'] = str(cpu_num)
 os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
 os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
-os.environ["CUDA_VISIBLE_DEVICES"] = '6'
-os.environ['CUDA_LAUNCH_BLOCKING'] = '6'
+os.environ["CUDA_VISIBLE_DEVICES"] = '7'
+os.environ['CUDA_LAUNCH_BLOCKING'] = '7'
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
                                       transforms.RandomCrop(32, padding=4),
                                       transforms.ToTensor(),

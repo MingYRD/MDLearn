@@ -21,8 +21,8 @@ class BP_Re(torch.nn.Module):
         return y_pred
 
 
-data_train_a = pd.read_csv('../sinc_train.txt', sep=' ', header=None, names=['B', 'A'])
-data_test_a = pd.read_csv('../sinc_test.txt', sep=' ', header=None, names=['B', 'A'])
+data_train_a = pd.read_csv('../other/sinc_train.txt', sep=' ', header=None, names=['B', 'A'])
+data_test_a = pd.read_csv('../other/sinc_test.txt', sep=' ', header=None, names=['B', 'A'])
 cols = data_train_a.shape[1]
 X_train = data_train_a.iloc[:, 1:cols]
 y_train = data_train_a.iloc[:, 0:1]

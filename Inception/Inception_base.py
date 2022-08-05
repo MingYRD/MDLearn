@@ -1,42 +1,86 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import torchvision
-from matplotlib import pyplot as plt
-from torch.utils.data import DataLoader
 import time
-from alive_progress import alive_bar
 from tqdm import tqdm
 
-from inception_model import Inception, Inception2, Inception3
+from inception_model import Inception, Inception1, Inception2, Inception3, M2_1, M2_2
 
 class inception_base(nn.Module):
 
     def __init__(self):
         super(inception_base, self).__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=3),
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
+            nn.ReLU(True),
             nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(64, 64, kernel_size=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            nn.Conv2d(64, 192, kernel_size=1),
+            nn.BatchNorm2d(192),
+            nn.ReLU(True)
+
+            # nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1),
+            # nn.BatchNorm2d(32),
+            # nn.ReLU(True),
+            # nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
+            # nn.BatchNorm2d(32),
+            # nn.ReLU(True),
+            # nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
+            # nn.BatchNorm2d(64),
+            # nn.ReLU(True),
+            # nn.MaxPool2d(kernel_size=2, stride=2),
+            # nn.Conv2d(in_channels=64, out_channels=80, kernel_size=3, stride=1, padding=1),
+            # nn.BatchNorm2d(80),
+            # nn.ReLU(True),
+            # nn.Conv2d(in_channels=80, out_channels=192, kernel_size=3, stride=1, padding=1),
+            # nn.BatchNorm2d(192),
+            # nn.ReLU(True),
+
+
         )
         self.conv2 = nn.Sequential(
-            Inception(64, 32, [48, 64], [8, 8, 16], 16),
-            Inception2(128, 64, [96, 112, 128], [8, 8, 16, 16, 32], 32),
-            Inception2(256, 64, [96, 112, 128], [8, 8, 16, 16, 32], 32),
+            Inception(192, 64, [96, 128], [16, 32], 32),
+            Inception(256, 128, [128, 192], [32, 96], 64),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            Inception3(256, 64, [32, 64, 64], [8, 8, 16, 16], 32),
-            Inception3(256, 128, [64, 128, 128], [8, 16, 32, 32], 64),
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            Inception(480, 192, [96, 208], [16, 48], 64),
+            Inception(512, 160, [112, 224], [24, 64], 64),
+            Inception(512, 128, [128, 256], [24, 64], 64),
+            Inception(512, 112, [144, 288], [32, 64], 64),
+            Inception(528, 256, [160, 320], [32, 128], 128),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            Inception(832, 256, [160, 320], [32, 128], 128),
+            Inception(832, 384, [192, 384], [48, 128], 128),
+            nn.AvgPool2d(4)
+
+
         )
+        # V3
+        # self.conv2 = nn.Sequential(
+        #     Inception1(192, 64, [48, 64], [64, 96, 96], 32),
+        #     Inception1(256, 64, [48, 64], [64, 96, 96], 64),
+        #     Inception1(288, 64, [48, 64], [64, 96, 96], 64),
+        #     M2_1(288, 384, 64, 96, 96),
+        #
+        #     Inception2(768, 192, [128, 128, 192], [128, 128, 128, 128, 192], 192),
+        #     Inception2(768, 192, [128, 128, 192], [128, 128, 128, 128, 192], 192),
+        #     Inception2(768, 192, [128, 128, 192], [128, 128, 128, 128, 192], 192),
+        #     Inception2(768, 192, [128, 128, 192], [128, 128, 128, 128, 192], 192),
+        #     # Inception2(528, 256, [160, 320], [32, 128], 128),
+        #     M2_2(768, 192, 320, 192, 192, 192, 192),
+        #
+        #     Inception3(1280, 320, [384, 384, 384], [384, 384, 384, 448], 192),
+        #     Inception3(2048, 384, [384, 384, 384], [384, 384, 384, 448], 128),
+        #     nn.AvgPool2d(4)
+        #
+        # )
         self.FC = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(512*4*4, 512),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5),
-            nn.Linear(512, 256),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5),
-            nn.Linear(256, 10)
+            nn.Dropout(0.4),
+            nn.Linear(1024, 10)
+            # nn.Linear(2048, 10)
         )
 
     def forward(self, x):
@@ -118,7 +162,7 @@ class Inception_test:
             self.error.append(1 - pre_acc)
             if pre_acc > acc_arr:
                 acc_arr = pre_acc
-                torch.save(self.inc.state_dict(), "inc_resnet_34_p.pth")
+                torch.save(self.inc.state_dict(), "inception_v.pth")
 
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")
@@ -142,4 +186,6 @@ class Inception_test:
     def get_ek(self):
         return self.ek, self.ek_t
 
+    def get_error(self):
+        return self.error
 

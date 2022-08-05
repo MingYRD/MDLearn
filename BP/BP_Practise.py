@@ -165,8 +165,8 @@ class BP:
         return ans / n, y_pred
 
 
-data_train = pd.read_csv('../diabetes_train.txt', sep=' ', header=None)
-data_test = pd.read_csv('../diabetes_test.txt', sep=' ', header=None)
+data_train = pd.read_csv('../other/diabetes_train.txt', sep=' ', header=None)
+data_test = pd.read_csv('../other/diabetes_test.txt', sep=' ', header=None)
 data_train_l = data_train
 data_test_l = data_test
 def normalize_f(data):

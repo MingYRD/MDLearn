@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 import numpy as np
-from alive_progress import alive_bar
+from tqdm import tqdm
 
 
 class vgg_model(nn.Module):
@@ -58,6 +58,7 @@ class vgg_test:
 
     def __init__(self, choice: str, lr: float, epochs: int, dif: int):
         self.lr = lr
+        self.error = []
         self.epochs = epochs
         self.choice = choice
         self.dif = dif
@@ -91,40 +92,73 @@ class vgg_test:
         self.y_t = None
         self.out_pred = None
 
-        self.device = torch.device('mps')
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.device0 = torch.device('cpu')
 
-    def train(self, train_loader, test_loader):
+    def update_lr(self, optimizer, lr):
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+
+    def smooth_step(self, a, b, c, d, x):
+        level_s = 0.01
+        level_m = 0.1
+        level_n = 0.01
+        level_r = 0.005
+        if x <= a:
+            return level_s
+        if a < x <= b:
+            return (((x - a) / (b - a)) * (level_m - level_s) + level_s)
+        if b < x <= c:
+            return level_m
+        if c < x <= d:
+            return level_n
+        if d < x:
+            return level_r
+
+    def train(self, train_dataloader, test_dataloader):
         self.vgg = self.vgg.to(self.device)
-        opt = torch.optim.SGD(self.vgg.parameters(), lr=self.lr, momentum=0.9, weight_decay=0.001)
-        loss_func = nn.CrossEntropyLoss()
-        scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.5, last_epoch=-1)
-        with alive_bar(self.epochs) as bar:
-            for epoch in range(self.epochs):
-                loss_a = 0
-                for img, labels in train_loader:
+
+        opt = torch.optim.SGD(self.vgg.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
+                              weight_decay=1e-4)
+        # opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9,
+        #                       weight_decay=1e-4)
+        loss_fun = torch.nn.CrossEntropyLoss()
+        # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=40, gamma=0.5, last_epoch=-1)
+        acc_arr = 0
+        for epoch in range(self.epochs):
+            loss_train = 0
+            loop = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
+            loop.set_description(f'Epoch [{epoch + 1}/{self.epochs}]')
+            for index, (img, labels) in loop:
+                img = img.to(self.device)
+                labels = labels.to(self.device)
+                out = self.vgg.forward(img)
+                loss = loss_fun(out, labels)
+                loss_train += loss
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+                # scheduler.step()
+            total_loss = 0  # 保存这次测试总的loss
+            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+                for img, labels in test_dataloader:
                     img = img.to(self.device)
                     labels = labels.to(self.device)
-                    pred = self.vgg.forward(img)
-                    loss = loss_func(pred, labels).to(self.device)
-                    loss_a += loss
-                    opt.zero_grad()
-                    loss.backward()
-                    opt.step()
-                scheduler.step()
-                loss_t = 0
-                with torch.no_grad():
-                    for img, labels in test_loader:
-                        img = img.to(self.device)
-                        labels = labels.to(self.device)
-                        pred_t = self.vgg.forward(img)
-                        loss_t += loss_func(pred_t, labels)
-                self.ek.append(loss_a.to(self.device0))
-                self.ek_t.append(loss_t.to(self.device0))
-                bar()
-                print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
-                print("第{}次训练的Loss:{}".format(epoch + 1, loss_t))
-                self.predict(test_loader)
+                    outputs = self.vgg.forward(img)
+                    loss = loss_fun(outputs, labels)
+                    total_loss += loss  # 累计误差
+            self.ek.append(loss_train.to(self.device0))
+            self.ek_t.append(total_loss.to(self.device0))
+            curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
+            self.update_lr(opt, curr_lr)
+
+            pre_acc = self.predict(test_dataloader)
+            # print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
+            print("Loss:{} ACC:{}".format(loss_train, pre_acc))
+            self.error.append(1 - pre_acc)
+            if pre_acc > acc_arr:
+                acc_arr = pre_acc
+                torch.save(self.vgg.state_dict(), "vgg_16.pth")
 
     def predict(self, test_loader):
         ans = 0
@@ -140,7 +174,11 @@ class vgg_test:
             for j in range(self.s_ans.shape[0]):
                 if self.s_ans[j] == self.y_t[j]:
                     ans += 1
-        print('ACC:', ans / k)
+        # print('ACC:', ans / k)
+        return ans / k
 
     def get_ek(self):
         return self.ek, self.ek_t
+
+    def get_error(self):
+        return self.error

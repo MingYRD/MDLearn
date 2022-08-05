@@ -191,8 +191,8 @@ class TestSVM_Classification:
     def __init__(self, TestNum=1000):
         # self.train_x, self.train_y = ReadData.getClassificationData('classification/diabetes_train')
         # self.test_x, self.test_y = ReadData.getClassificationData('classification/diabetes_test')
-        data_train = pd.read_csv('../diabetes_train.txt', sep=' ', header=None)
-        data_test = pd.read_csv('../diabetes_test.txt', sep=' ', header=None)
+        data_train = pd.read_csv('../other/diabetes_train.txt', sep=' ', header=None)
+        data_test = pd.read_csv('../other/diabetes_test.txt', sep=' ', header=None)
 
         def normalize_f(data):
             return (data - data.mean()) / data.std()

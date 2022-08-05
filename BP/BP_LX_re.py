@@ -6,8 +6,8 @@ from BP_General import BP_G
 def normalize_f(data):
     return (data - data.min())/(data.max() - data.min())
 
-data_train_a = pd.read_csv('../sinc_train.txt', sep=' ', header=None, names=['B', 'A'])
-data_test_a = pd.read_csv('../sinc_test.txt', sep=' ', header=None, names=['B', 'A'])
+data_train_a = pd.read_csv('../other/sinc_train.txt', sep=' ', header=None, names=['B', 'A'])
+data_test_a = pd.read_csv('../other/sinc_test.txt', sep=' ', header=None, names=['B', 'A'])
 # data_train_a = normalize_f(data_train_a)
 # data_test_a = normalize_f(data_test_a)
 cols = data_train_a.shape[1]

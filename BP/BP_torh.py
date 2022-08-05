@@ -29,8 +29,8 @@ class BPNet(torch.nn.Module):
                 ans.append(1)
         return torch.tensor(ans)
 
-data_train = pd.read_csv('../diabetes_train.txt', sep=' ', header=None)
-data_test = pd.read_csv('../diabetes_test.txt', sep=' ', header=None)
+data_train = pd.read_csv('../other/diabetes_train.txt', sep=' ', header=None)
+data_test = pd.read_csv('../other/diabetes_test.txt', sep=' ', header=None)
 cols = data_train.shape[1]
 X_train = data_train.iloc[:, 1:cols]
 y_train = data_train.iloc[:, 0:1]

@@ -18,6 +18,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '7'
 os.environ['CUDA_LAUNCH_BLOCKING'] = '7'
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
                                       transforms.RandomCrop(32, padding=4),
+                                      transforms.ColorJitter(0.5, 0.5, 0.5),  # 颜色变换
                                       transforms.ToTensor(),
                                       transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]
                                      )
