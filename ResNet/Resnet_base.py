@@ -22,15 +22,15 @@ class resnet_base(nn.Module):
             # nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
         # resnet-18
-        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
-        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
-        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 2))
-        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 2))
+        self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 2, first_block=True))
+        self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 2))
+        self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 2))
+        self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 2))
         # resnet - 34
-        self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
-        self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4))
-        self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 6))
-        self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 3))
+        # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
+        # self.conv3 = nn.Sequential(*self.make_resnet_block(64, 128, 4))
+        # self.conv4 = nn.Sequential(*self.make_resnet_block(128, 256, 6))
+        # self.conv5 = nn.Sequential(*self.make_resnet_block(256, 512, 3))
 
         # resnet - 20
         # self.conv2 = nn.Sequential(*self.make_resnet_block(64, 64, 3, first_block=True))
@@ -110,11 +110,12 @@ class resnet_test:
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
-    def smooth_step(self, a, b, c, d, x):
+    def smooth_step(self, a, b, c, d, e, x):
         level_s = 0.01
         level_m = 0.1
         level_n = 0.01
         level_r = 0.005
+        level_r2 = 0.0001
         if x <= a:
             return level_s
         if a < x <= b:
@@ -125,11 +126,13 @@ class resnet_test:
             return level_n
         if d < x:
             return level_r
+        if x > e:
+            return level_r2
 
     def train(self, train_dataloader, test_dataloader):
         self.inc = self.inc.to(self.device)
 
-        opt = torch.optim.SGD(self.inc.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
+        opt = torch.optim.SGD(self.inc.parameters(), lr=self.smooth_step(10, 40, 100, 150, 200, 0), momentum=0.9,
                               weight_decay=1e-4)
         # opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9,
         #                       weight_decay=1e-4)
@@ -141,6 +144,8 @@ class resnet_test:
             loss_train = 0
             loop = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
             loop.set_description(f'Epoch [{epoch + 1}/{self.epochs}]')
+
+            self.inc.train()
             for index, (img, labels) in loop:
                 img = img.to(self.device)
                 labels = labels.to(self.device)
@@ -151,26 +156,25 @@ class resnet_test:
                 loss.backward()
                 opt.step()
                 # scheduler.step()
-            total_loss = 0  # 保存这次测试总的loss
-            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                for img, labels in test_dataloader:
-                    img = img.to(self.device)
-                    labels = labels.to(self.device)
-                    outputs = self.inc.forward(img)
-                    loss = loss_fun(outputs, labels)
-                    total_loss += loss  # 累计误差
-            self.ek.append(loss_train.to(self.device0))
-            self.ek_t.append(total_loss.to(self.device0))
-            curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
-            self.update_lr(opt, curr_lr)
-
             pre_acc = self.predict(test_dataloader)
+            # total_loss = 0  # 保存这次测试总的loss
+            # with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+            #     for img, labels in test_dataloader:
+            #         img = img.to(self.device)
+            #         labels = labels.to(self.device)
+            #         outputs = self.inc.forward(img)
+            #         loss = loss_fun(outputs, labels)
+            #         total_loss += loss  # 累计误差
+            # self.ek.append(loss_train.to(self.device0))
+            # self.ek_t.append(total_loss.to(self.device0))
+            curr_lr = self.smooth_step(10, 40, 100, 150, 200, epoch)
+            self.update_lr(opt, curr_lr)
             # print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
             print("Loss:{} ACC:{}".format(loss_train, pre_acc))
             self.error.append(1 - pre_acc)
             if pre_acc > acc_arr:
                 acc_arr = pre_acc
-                torch.save(self.inc.state_dict(), "inc_resnet_20.pth")
+                torch.save(self.inc.state_dict(), "inc_resnet_18.pth")
 
         # print('Time:' + str(self.current_time - self.old_time) + 's')
         # torch.save(self.cnn, "cnn_digit.nn")
@@ -178,6 +182,7 @@ class resnet_test:
     def predict(self, test_dataloader):
         ans = 0
         k = 0
+        self.inc.eval()
         for img, labels in test_dataloader:
             img = img.to(self.device)
             outputs = self.inc.forward(img)

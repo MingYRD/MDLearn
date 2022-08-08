@@ -15,16 +15,17 @@ class vgg_model(nn.Module):
         self.out_channels = out_channels
         self.FC = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(self.out_channels*self.end_shape*self.end_shape, self.hidden_num),
-            nn.ReLU(inplace=True),
             nn.Dropout(0.5),
+            nn.Linear(1*1*512, 1024),
+            nn.ReLU(inplace=True),
+
             # nn.Linear(self.hidden_num, self.hidden_num),
             # nn.ReLU(inplace=True),
             # nn.Dropout(0.5),
-            nn.Linear(self.hidden_num, 256),
-            nn.ReLU(inplace=True),
             nn.Dropout(0.5),
-            nn.Linear(256, self.out_num),
+            nn.Linear(1024, 1024),
+            nn.ReLU(inplace=True),
+            nn.Linear(1024, self.out_num),
         )
         # self.FC2 = nn.Softmax(dim=0)
         if init_flag:
@@ -99,11 +100,12 @@ class vgg_test:
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
-    def smooth_step(self, a, b, c, d, x):
+    def smooth_step(self, a, b, c, d, e, x):
         level_s = 0.01
         level_m = 0.1
         level_n = 0.01
         level_r = 0.005
+        level_r2 = 0.0001
         if x <= a:
             return level_s
         if a < x <= b:
@@ -112,13 +114,15 @@ class vgg_test:
             return level_m
         if c < x <= d:
             return level_n
-        if d < x:
+        if d < x <= e:
             return level_r
+        if x > e:
+            return level_r2
 
     def train(self, train_dataloader, test_dataloader):
         self.vgg = self.vgg.to(self.device)
 
-        opt = torch.optim.SGD(self.vgg.parameters(), lr=self.smooth_step(10, 40, 100, 150, 0), momentum=0.9,
+        opt = torch.optim.SGD(self.vgg.parameters(), lr=self.smooth_step(10, 40, 100, 150, 200, 0), momentum=0.9,
                               weight_decay=1e-4)
         # opt = torch.optim.SGD(self.inc.parameters(), lr=self.lr, momentum=0.9,
         #                       weight_decay=1e-4)
@@ -129,6 +133,7 @@ class vgg_test:
             loss_train = 0
             loop = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
             loop.set_description(f'Epoch [{epoch + 1}/{self.epochs}]')
+            self.vgg.train()
             for index, (img, labels) in loop:
                 img = img.to(self.device)
                 labels = labels.to(self.device)
@@ -139,30 +144,30 @@ class vgg_test:
                 loss.backward()
                 opt.step()
                 # scheduler.step()
-            total_loss = 0  # 保存这次测试总的loss
-            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                for img, labels in test_dataloader:
-                    img = img.to(self.device)
-                    labels = labels.to(self.device)
-                    outputs = self.vgg.forward(img)
-                    loss = loss_fun(outputs, labels)
-                    total_loss += loss  # 累计误差
-            self.ek.append(loss_train.to(self.device0))
-            self.ek_t.append(total_loss.to(self.device0))
-            curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
+            pre_acc = self.predict(test_dataloader)
+            # total_loss = 0  # 保存这次测试总的loss
+            # with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+            #     for img, labels in test_dataloader:
+            #         img = img.to(self.device)
+            #         labels = labels.to(self.device)
+            #         outputs = self.vgg.forward(img)
+            #         loss = loss_fun(outputs, labels)
+            #         total_loss += loss  # 累计误差
+            # self.ek.append(loss_train.to(self.device0))
+            # self.ek_t.append(total_loss.to(self.device0))
+            curr_lr = self.smooth_step(10, 40, 100, 150, 200, epoch)
             self.update_lr(opt, curr_lr)
 
-            pre_acc = self.predict(test_dataloader)
-            # print('Epoch:{} / {}'.format(str(epoch + 1), str(self.epochs)))
             print("Loss:{} ACC:{}".format(loss_train, pre_acc))
             self.error.append(1 - pre_acc)
             if pre_acc > acc_arr:
                 acc_arr = pre_acc
-                torch.save(self.vgg.state_dict(), "vgg_16.pth")
+                torch.save(self.vgg.state_dict(), "vgg_19.pth")
 
     def predict(self, test_loader):
         ans = 0
         k = 0
+        self.vgg.eval()
         for img, labels in test_loader:
             img = img.to(self.device)
             outputs = self.vgg.forward(img)

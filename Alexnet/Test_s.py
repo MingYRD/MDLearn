@@ -10,8 +10,8 @@ os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
 os.environ['MKL_NUM_THREADS'] = str(cpu_num)
 os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
 os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
-os.environ["CUDA_VISIBLE_DEVICES"] = '7'
-os.environ['CUDA_LAUNCH_BLOCKING'] = '7'
+os.environ["CUDA_VISIBLE_DEVICES"] = '2'
+os.environ['CUDA_LAUNCH_BLOCKING'] = '2'
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
                                       transforms.RandomCrop(32, padding=4),
                                       transforms.ColorJitter(0.5, 0.5, 0.5),  # 颜色变换

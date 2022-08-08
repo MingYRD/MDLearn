@@ -42,12 +42,12 @@ train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=256, shuffle=False)
 
 lr = 0.1
-epochs = 200
+epochs = 220
 inc = Inception_test(lr, epochs)
 inc.train(train_dataloader, test_dataloader)
 err = inc.get_error()
 err = np.array(err)
-np.save('err_inception.npy', err)
+np.save('err_inceptionv3.npy', err)
 # ek, ek_t = inc.get_ek()
 #
 # for i in range(len(ek)):

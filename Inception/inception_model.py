@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-def conv_bn_relu(in_channels, out_channels, kernelSize, stride=1, padding=None):
+def conv_bn_relu(in_channels, out_channels, kernelSize, stride=1, padding=0):
     layer = nn.Sequential(
         nn.Conv2d(in_channels, out_channels, kernelSize, stride, padding),
         nn.BatchNorm2d(out_channels, eps=1e-3),
@@ -226,7 +226,7 @@ class M2_1(nn.Module):
         self.branch2 = nn.Sequential(
             conv_bn_relu(in_channel, out2_1, 1),
             conv_bn_relu(out2_1, out2_2, 3, stride=1, padding=1),
-            conv_bn_relu(out2_2, out2_3, 3, stride=2, padding=1),
+            conv_bn_relu(out2_2, out2_3, 3, stride=2, padding=1)
         )
         self.branch3 = nn.Sequential(
             nn.MaxPool2d(2,2),
@@ -249,7 +249,7 @@ class M2_2(nn.Module):
             conv_bn_relu(in_channel, out2_1, 1),
             conv_bn_relu(out2_1, out2_2, kernelSize=(1, 7), stride=1, padding=(0, 3)),
             conv_bn_relu(out2_2, out2_3, kernelSize=(7, 1), stride=1, padding=(3, 0)),
-            conv_bn_relu(out2_3, out2_4, 3, 2, 1),
+            conv_bn_relu(out2_3, out2_4, 3, 2, 1)
         )
         self.branch3 = nn.Sequential(
             nn.MaxPool2d(2,2),

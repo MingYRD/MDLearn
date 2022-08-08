@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid
 from VGG_model import vgg_test
+from ourdata_test.data_setup_lary import data_set_laryngeal
+from ourdata_test.data_setup_xc import data_set_xc
 
 import os
 
@@ -16,8 +18,8 @@ os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
 os.environ['MKL_NUM_THREADS'] = str(cpu_num)
 os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
 os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
-os.environ["CUDA_VISIBLE_DEVICES"] = '7'
-os.environ['CUDA_LAUNCH_BLOCKING'] = '7'
+os.environ["CUDA_VISIBLE_DEVICES"] = '2'
+os.environ['CUDA_LAUNCH_BLOCKING'] = '2'
 transform_train = transforms.Compose([transforms.RandomHorizontalFlip(),
                                       transforms.RandomCrop(32, padding=4),
                                       transforms.ColorJitter(0.5, 0.5, 0.5),  # 颜色变换
@@ -43,16 +45,18 @@ test_data = torchvision.datasets.CIFAR10(
 train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=256, shuffle=False)
 
+# train_dataloader, test_dataloader = data_set_laryngeal()
+# train_dataloader, test_dataloader = data_set_xc()
 
 lr = 0.1
 epochs = 220
-version = 'D'
+version = 'E'
 inc = vgg_test(version, lr, epochs, 1)
 inc.train(train_dataloader, test_dataloader)
 
 err = inc.get_error()
 err = np.array(err)
-np.save('err_vgg16.npy', err)
+np.save('err_vgg19.npy', err)
 #
 # cn = 1
 # for img, labels in train_dataloader:

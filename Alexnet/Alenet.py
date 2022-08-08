@@ -97,6 +97,7 @@ class Alexnet_test:
             loss_train = 0
             loop = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
             loop.set_description(f'Epoch [{epoch + 1}/{self.epochs}]')
+            self.inc.train()
             for index, (img, labels) in loop:
                 img = img.to(self.device)
                 labels = labels.to(self.device)
@@ -107,16 +108,16 @@ class Alexnet_test:
                 loss.backward()
                 opt.step()
                 # scheduler.step()
-            total_loss = 0  # 保存这次测试总的loss
-            with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
-                for img, labels in test_dataloader:
-                    img = img.to(self.device)
-                    labels = labels.to(self.device)
-                    outputs = self.inc.forward(img)
-                    loss = loss_fun(outputs, labels)
-                    total_loss += loss  # 累计误差
-            self.ek.append(loss_train.to(self.device0))
-            self.ek_t.append(total_loss.to(self.device0))
+            # total_loss = 0  # 保存这次测试总的loss
+            # with torch.no_grad():  # 下面不需要反向传播，所以不需要自动求导
+            #     for img, labels in test_dataloader:
+            #         img = img.to(self.device)
+            #         labels = labels.to(self.device)
+            #         outputs = self.inc.forward(img)
+            #         loss = loss_fun(outputs, labels)
+            #         total_loss += loss  # 累计误差
+            # self.ek.append(loss_train.to(self.device0))
+            # self.ek_t.append(total_loss.to(self.device0))
             curr_lr = self.smooth_step(10, 40, 100, 150, epoch)
             self.update_lr(opt, curr_lr)
             pre_acc = self.predict(test_dataloader)
@@ -132,6 +133,7 @@ class Alexnet_test:
     def predict(self, test_dataloader):
         ans = 0
         k = 0
+        self.inc.eval()
         for img, labels in test_dataloader:
             img = img.to(self.device)
             outputs = self.inc.forward(img)
